@@ -301,6 +301,19 @@ kbd{font-size:11px;border:1px solid var(--line);border-radius:4px;padding:0 4px;
 .mtabs{display:inline-flex;border:1px solid var(--line);border-radius:10px;overflow:hidden}.mtabs button{border:0;background:var(--panel);padding:7px 14px}.mtabs button.on{background:var(--accent);color:#fff}
 tr[data-mjump]{cursor:pointer}tr[data-mjump]:hover td{background:var(--accent-soft)}
 .up{color:var(--danger)}.down{color:var(--ok)}
+.pinbox{max-width:340px;margin:20px auto;text-align:center}
+.pinbox h2{margin:6px 0 4px;font-size:20px}.pinic{font-size:44px}
+.pindots{display:flex;gap:16px;justify-content:center;margin:18px 0 10px}
+.pindots i{width:16px;height:16px;border-radius:50%;border:2px solid var(--accent);transition:.15s}.pindots i.on{background:var(--accent)}
+.pinin{position:absolute;opacity:0;width:1px;height:1px;pointer-events:none}
+.pinpad{display:grid;grid-template-columns:repeat(3,72px);gap:14px;justify-content:center;margin-top:16px}
+.pk{width:72px;height:72px;border-radius:50%;border:1px solid var(--line);background:var(--panel2);font-size:26px;font-weight:600;color:var(--text)}
+.pk:active{background:var(--accent);color:#fff}
+.pinmsg{min-height:22px;color:var(--danger);font-size:13px;margin-top:10px}
+.shake{animation:shake .35s}@keyframes shake{20%,60%{transform:translateX(-8px)}40%,80%{transform:translateX(8px)}}
+.diary-paper{background:linear-gradient(var(--panel),var(--panel)) padding-box;border-color:#e9d8b4}
+.dy-title{width:100%;font-size:18px;font-weight:700;margin-bottom:10px}
+.dy-text{min-height:420px;font-size:15px;line-height:2;background:repeating-linear-gradient(transparent,transparent 29px,var(--line) 30px);background-attachment:local;padding-top:4px}
 @media print{.side,.topbar,.qbar,.ta,.addf{display:none!important}.main{padding:0}}
 </style>
 </head>
@@ -314,6 +327,7 @@ tr[data-mjump]{cursor:pointer}tr[data-mjump]:hover td{background:var(--accent-so
     <button class="nav" data-v="month">📆 <span>월간 업무</span><span class="k">4</span></button>
     <button class="nav" data-v="archive">✅ <span>마감 기록</span><span class="k">5</span></button>
     <button class="nav" data-v="journal">📔 <span>업무일지</span><span class="k">6</span></button>
+    <button class="nav" data-v="diary">📖 <span>일기장 🔒</span><span class="k"></span></button>
     <button class="nav" data-v="memo">📝 <span>메모</span><span class="k">7</span></button>
     <button class="nav" data-v="ideas">💡 <span>아이디어 노트</span><span class="k">8</span></button>
     <button class="nav" data-v="money">💰 <span>가계부</span><span class="k">9</span></button>
@@ -359,7 +373,7 @@ const esc=s=>String(s??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&
 const DOW=['일','월','화','수','목','금','토'];
 const kdate=s=>{const d=parse(s);return `${d.getMonth()+1}월 ${d.getDate()}일 (${DOW[d.getDay()]})`};
 const localDateOfISO=iso=>iso?fmt(new Date(iso)):null;
-const DAY_LIMIT=30, OTHER_LIMIT=60;
+const DAY_LIMIT=50, OTHER_LIMIT=60;
 const PRI={H:'🔴 긴급',M:'🟡 보통',L:'🟢 낮음'};
 const PRI_ORDER={H:0,M:1,L:2};
 
@@ -452,8 +466,8 @@ const KEY='miracle_planner_v1';
 const DEFAULT={tasks:[],journals:{},memos:[],routines:[],weekNotes:{},monthNotes:{},yearGoals:{},ddays:[],customQuotes:[],
   cats:['영업','미팅','거래처','재무·세금','마케팅','운영','제품·개발','인사','개인'],
   routineApplied:{},settings:{theme:'light'},lastBackup:null,ks:{},tomb:{},
-  habits:[{id:'h_read',text:'독서',min:60,icon:'📚'},{id:'h_exercise',text:'운동',min:30,icon:'🏃'},{id:'h_news',text:'뉴스 보기',min:30,icon:'📰'},{id:'h_platform',text:'운영 플랫폼 서칭',min:60,icon:'🔍'},{id:'h_stock',text:'재고 확인',min:0,icon:'📦'},{id:'h_spend',text:'지출 확인',min:0,icon:'💸'},{id:'h_order',text:'주문 확인',min:0,icon:'🛒'},{id:'h_market',text:'시장조사 서칭',min:0,icon:'🔎'}],
-  habitLog:{},ideas:[],money:[],moneyBudget:{}};
+  habits:[{id:'h_read',text:'독서',min:60,icon:'📚'},{id:'h_exercise',text:'운동',min:30,icon:'🏃'},{id:'h_news',text:'뉴스 보기',min:30,icon:'📰'},{id:'h_platform',text:'운영 플랫폼 서칭',min:60,icon:'🔍'},{id:'h_stock',text:'재고 확인',min:0,icon:'📦'},{id:'h_spend',text:'지출 확인',min:0,icon:'💸'},{id:'h_order',text:'주문 확인',min:0,icon:'🛒'},{id:'h_market',text:'시장조사 서칭',min:0,icon:'🔎'},{id:'h_reels',text:'인스타그램 릴스 업로드',min:0,icon:'🎬'}],
+  habitLog:{},ideas:[],money:[],moneyBudget:{},diary:{},diaryPin:''};
 let S;
 let _seed=null;try{if(!localStorage.getItem(KEY)&&window.SEED_DATA&&window.SEED_DATA.tasks)_seed=window.SEED_DATA}catch(e){}
 try{S=Object.assign(structuredClone(DEFAULT),_seed||JSON.parse(localStorage.getItem(KEY)||'{}'))}catch(e){S=structuredClone(DEFAULT)}
@@ -462,16 +476,18 @@ if(!S.migr.h2){ // 기존 사용자에게 '재고 확인'·'지출 확인' 루�
   [{id:'h_stock',text:'재고 확인',min:0,icon:'📦'},{id:'h_spend',text:'지출 확인',min:0,icon:'💸'}].forEach(h=>{if(!S.habits.some(x=>x.id===h.id))S.habits.push(h)});S.migr.h2=true}
 if(!S.migr.h3){ // '주문 확인'·'시장조사 서칭' 루틴 1회 추가
   [{id:'h_order',text:'주문 확인',min:0,icon:'🛒'},{id:'h_market',text:'시장조사 서칭',min:0,icon:'🔎'}].forEach(h=>{if(!S.habits.some(x=>x.id===h.id))S.habits.push(h)});S.migr.h3=true}
+if(!S.migr.h4){ // '인스타그램 릴스 업로드' 루틴 1회 추가
+  if(!S.habits.some(x=>x.id==='h_reels'))S.habits.push({id:'h_reels',text:'인스타그램 릴스 업로드',min:0,icon:'🎬'});S.migr.h4=true}
 /* ---- 동기화용 변경 추적: 항목마다 마지막 수정 시각(ks)과 삭제 기록(tomb)을 남김 ---- */
-const ARR_F=['tasks','memos','routines','ddays','habits','ideas','money'],MAP_F=['journals','weekNotes','monthNotes','routineApplied','habitLog','moneyBudget'];
+const ARR_F=['tasks','memos','routines','ddays','habits','ideas','money'],MAP_F=['journals','weekNotes','monthNotes','routineApplied','habitLog','moneyBudget','diary'];
 function units(st){const m=new Map();
   ARR_F.forEach(a=>(st[a]||[]).forEach(x=>m.set(a+':'+x.id,x)));
   Object.entries(st.yearGoals||{}).forEach(([y,gs])=>(gs||[]).forEach(g=>m.set('yearGoals:'+y+':'+g.id,g)));
   MAP_F.forEach(n=>Object.entries(st[n]||{}).forEach(([k,v])=>m.set(n+':'+k,v)));
-  m.set('cats',st.cats||[]);m.set('customQuotes',st.customQuotes||[]);return m}
+  m.set('cats',st.cats||[]);m.set('customQuotes',st.customQuotes||[]);m.set('diaryPin',st.diaryPin||'');return m}
 function unitsJSON(st){const m=new Map();for(const[k,v] of units(st))m.set(k,JSON.stringify(v));return m}
 function fromUnits(m,base){const st=Object.assign({},base);ARR_F.forEach(a=>st[a]=[]);st.yearGoals={};MAP_F.forEach(n=>st[n]={});
-  for(const[k,v] of m){if(k==='cats'||k==='customQuotes'){st[k]=v;continue}
+  for(const[k,v] of m){if(k==='cats'||k==='customQuotes'||k==='diaryPin'){st[k]=v;continue}
     const i=k.indexOf(':'),n=k.slice(0,i),rest=k.slice(i+1);
     if(ARR_F.includes(n))st[n].push(v);else if(n==='yearGoals'){(st.yearGoals[rest.slice(0,rest.indexOf(':'))]??=[]).push(v)}else st[n][rest]=v}
   return st}
@@ -577,19 +593,20 @@ $('.slides').addEventListener('mouseenter',()=>{slidePaused=true;showSlide(slide
 $('.slides').addEventListener('mouseleave',()=>{slidePaused=false;showSlide(slideIdx)});
 
 /* ================= 렌더 ================= */
-const TITLES={home:'홈 · 오늘의 업무',day:'일간 업무',week:'주간 업무 일정',month:'월간 업무 일정',archive:'마감 기록 (완료 업무 보관함)',journal:'업무일지',memo:'메모',ideas:'💡 아이디어 노트',money:'💰 가계부 · 지출 관리',year:'연간 기록',settings:'설정 · 백업'};
+const TITLES={home:'홈 · 오늘의 업무',day:'일간 업무',week:'주간 업무 일정',month:'월간 업무 일정',archive:'마감 기록 (완료 업무 보관함)',journal:'업무일지',diary:'📖 일기장',memo:'메모',ideas:'💡 아이디어 노트',money:'💰 가계부 · 지출 관리',year:'연간 기록',settings:'설정 · 백업'};
 function render(){
+  if(V.view!=='diary')V.diaryOpen=false; // 일기장을 벗어나면 자동 잠금
   document.querySelectorAll('.nav').forEach(b=>b.classList.toggle('on',b.dataset.v===V.view));
   $('#title').textContent=TITLES[V.view];
   $('#qbar').style.display=V.view==='home'?'':'none';
   const days=S.lastBackup?Math.floor((Date.now()-S.lastBackup)/864e5):null;
   $('#bkInfo').textContent=days===null?'💾 백업 기록 없음':`💾 마지막 백업: ${days===0?'오늘':days+'일 전'}`;
-  ({home:rHome,day:rDay,week:rWeek,month:rMonth,archive:rArchive,journal:rJournal,memo:rMemo,ideas:rIdeas,money:rMoney,year:rYear,settings:rSettings})[V.view]();
+  ({home:rHome,day:rDay,week:rWeek,month:rMonth,archive:rArchive,journal:rJournal,diary:rDiary,memo:rMemo,ideas:rIdeas,money:rMoney,year:rYear,settings:rSettings})[V.view]();
 }
 function go(v,extra={}){Object.assign(V,extra);V.view=v;render();window.scrollTo(0,0)}
 
 /* ---------- 매일 루틴 ---------- */
-const HICONS=['🛒','🔎','📚','🏃','📰','🔍','🧘','✍️','💧','🙏','📊','💡','🎧','🌅','💪','🍎','🛌','📞','🗣️','💰'];
+const HICONS=['🎬','📸','🛒','🔎','📚','🏃','📰','🔍','🧘','✍️','💧','🙏','📊','💡','🎧','🌅','💪','🍎','🛌','📞','🗣️','💰'];
 const hDone=(d,id)=>!!(S.habitLog[d]&&S.habitLog[d][id]);
 const hDayPct=d=>S.habits.length?S.habits.filter(h=>hDone(d,h.id)).length/S.habits.length:0;
 function hStreak(id){let n=0,d=new Date();if(!hDone(fmt(d),id))d=addDays(d,-1);while(hDone(fmt(d),id)){n++;d=addDays(d,-1)}return n}
@@ -672,7 +689,7 @@ function rHome(){
         ${sel!==t?'<button class="btn sm" data-sel="today">오늘로</button>':''}
         <button class="btn sm" data-go2="day">📋 크게 보기</button><button class="btn sm" data-jgo="${sel}">📔 일지</button></span></h3>
       ${sel===t&&od.length?`<div class="notice">⚠️ 지난 미완료 업무 ${od.length}건이 있어요. <button class="btn sm" id="carry" style="margin-left:auto">오늘로 가져오기</button></div>`:''}
-      ${addForm('day',sel,full?'오늘은 30개가 모두 찼어요':'해야 할 일 입력 후 Enter (단축키 N)')}
+      ${addForm('day',sel,full?`오늘은 ${DAY_LIMIT}개가 모두 찼어요`:'해야 할 일 입력 후 Enter (단축키 N)')}
       <div class="bar" style="margin:-2px 0 10px"><i style="width:${progress(selList).p}%"></i></div>
       ${taskList('day',sel)}
       ${weekMonthMini()}
@@ -733,7 +750,7 @@ function rDay(){
   <div class="grid g-home">
     <div class="card"><h3>✅ 해야 할 일 <span class="r"><span class="limit ${full?'full':''}">${l.length} / ${DAY_LIMIT}</span></span></h3>
       ${sel===t&&od.length?`<div class="notice">⚠️ 지난 미완료 업무 ${od.length}건이 있어요. <button class="btn sm" id="carry" style="margin-left:auto">오늘로 가져오기</button></div>`:''}
-      ${addForm('day',sel,full?'이 날은 30개가 모두 찼어요':'해야 할 일 입력 후 Enter (여러 줄 붙여넣기 가능)')}
+      ${addForm('day',sel,full?`이 날은 ${DAY_LIMIT}개가 모두 찼어요`:'해야 할 일 입력 후 Enter (여러 줄 붙여넣기 가능)')}
       <div class="bar" style="margin:-2px 0 10px"><i style="width:${p.p}%"></i></div>
       ${l.filter(x=>!x.done).length?`<ul class="tasks">${l.filter(x=>!x.done).map(taskLi).join('')}</ul>`:l.length?'<div class="empty">🎉 모든 업무 완료! 오늘도 해냈습니다.</div>':taskList('day',sel)}
       ${p.d?`<h3 style="margin-top:16px">✔ 완료한 업무 (${p.d})</h3><ul class="tasks">${l.filter(x=>x.done).map(taskLi).join('')}</ul>`:''}
@@ -1119,6 +1136,75 @@ function rMoney(){
     download(`가계부_${label.replace(/[ /~]+/g,'_')}.csv`,'\ufeff'+rows2.map(r=>r.map(c=>'"'+String(c??'').replace(/"/g,'""')+'"').join(',')).join('\n'),'text/csv')};
 }
 
+/* ---------- 일기장 (비밀번호 4자리 잠금) ---------- */
+const DMOODS=['😊','😄','🥰','😌','😐','😔','😢','😡','😴','🤔'],DWEATHER=['☀️','⛅','☁️','🌧️','⛈️','❄️','🌫️'];
+let diaryLastAct=Date.now(),diaryFails=0,diaryBlockUntil=0;
+async function pinHash(p){const b=await crypto.subtle.digest('SHA-256',new TextEncoder().encode('miracle-diary-pin:'+p));return [...new Uint8Array(b)].map(x=>x.toString(16).padStart(2,'0')).join('')}
+function lockDiary(){if(V.diaryOpen){V.diaryOpen=false;if(V.view==='diary'){closeModal();render()}}}
+document.addEventListener('visibilitychange',()=>{if(document.visibilityState==='hidden')lockDiary()});
+setInterval(()=>{if(V.diaryOpen&&Date.now()-diaryLastAct>5*60*1000){lockDiary();toast('🔒 5분 동안 사용하지 않아 일기장을 잠갔어요.')}},15000);
+['keydown','pointerdown','input'].forEach(ev=>document.addEventListener(ev,()=>{diaryLastAct=Date.now()},true));
+function pinPad(title,sub){return `<div class="pinbox" id="pinbox"><div class="pinic">🔒</div><h2>${title}</h2><p class="muted small">${sub||''}</p>
+  <div class="pindots" id="pin_dots"><i></i><i></i><i></i><i></i></div>
+  <input id="pin" class="pinin" type="password" inputmode="numeric" pattern="[0-9]*" maxlength="4" autocomplete="off">
+  <div class="pinpad">${[1,2,3,4,5,6,7,8,9,'',0,'⌫'].map(k=>k===''?'<span></span>':`<button class="pk" data-pk="${k}">${k}</button>`).join('')}</div>
+  <div class="pinmsg" id="pin_msg"></div></div>`}
+function pinDots(){const i=$('#pin');document.querySelectorAll('#pin_dots i').forEach((d,k)=>d.classList.toggle('on',!!i&&k<i.value.length))}
+function pinClear(){const i=$('#pin');if(i){i.value='';pinDots()}}
+function pinMsg(m){const e=$('#pin_msg'),b=$('#pinbox');if(e)e.textContent=m;if(b){b.classList.remove('shake');void b.offsetWidth;b.classList.add('shake')}}
+function pinBind(fn){const i=$('#pin');if(!matchMedia('(hover:none)').matches)setTimeout(()=>i.focus(),50);
+  $('#pinbox').onclick=e=>{if(!e.target.closest('.pk')&&!matchMedia('(hover:none)').matches)i.focus()};
+  let busy=false;i.oninput=async()=>{i.value=i.value.replace(/\D/g,'').slice(0,4);pinDots();if(i.value.length===4&&!busy){busy=true;const v=i.value;await fn(v);busy=false}}}
+function rDiary(){if(!S.diaryPin)return rDiarySetup();if(!V.diaryOpen)return rDiaryLock();rDiaryOpen()}
+function rDiarySetup(){
+  $('#view').innerHTML=`<div class="card">${pinPad(V._pinFirst?'한 번 더 입력하세요':'일기장 비밀번호 4자리를 정해주세요','이 비밀번호를 입력해야 일기장에 들어갈 수 있어요.<br>자동 동기화를 켜두면 모든 기기에서 같은 비밀번호를 씁니다.')}</div>`;
+  pinBind(async v=>{if(!V._pinFirst){V._pinFirst=v;return rDiarySetup()}
+    if(v!==V._pinFirst){V._pinFirst=null;rDiarySetup();return pinMsg('두 번 입력한 비밀번호가 달라요. 처음부터 다시 정해주세요.')}
+    S.diaryPin=await pinHash(v);V._pinFirst=null;V.diaryOpen=true;diaryLastAct=Date.now();commit();toast('🔒 일기장 비밀번호를 설정했어요. 잊지 마세요!')})}
+function rDiaryLock(){
+  $('#view').innerHTML=`<div class="card">${pinPad('📖 일기장','비밀번호 4자리를 입력하세요')}<div style="text-align:center;margin-top:6px"><button class="btn sm" id="pinForgot">비밀번호를 잊었어요</button></div></div>`;
+  pinBind(async v=>{
+    if(Date.now()<diaryBlockUntil){pinClear();return pinMsg(`잠시 후 다시 시도하세요 (${Math.ceil((diaryBlockUntil-Date.now())/1000)}초)`)}
+    if(await pinHash(v)===S.diaryPin){diaryFails=0;V.diaryOpen=true;diaryLastAct=Date.now();return render()}
+    diaryFails++;pinClear();
+    if(diaryFails>=5){diaryFails=0;diaryBlockUntil=Date.now()+30000;pinMsg('5번 틀려서 30초 동안 입력할 수 없어요.')}else pinMsg(`비밀번호가 틀렸어요 (${diaryFails}/5)`)});
+  $('#pinForgot').onclick=()=>{const n=Object.keys(S.diary).length;
+    if(confirm(`비밀번호를 모르면 일기를 열 수 없어요.\n\n일기 ${n}개를 모두 지우고 새 비밀번호로 시작할까요?\n(업무일지·할일 등 다른 데이터는 그대로입니다)`)&&confirm('정말 모든 일기를 삭제할까요? 되돌릴 수 없습니다.')){S.diary={};S.diaryPin='';V.diaryOpen=false;commit();toast('일기장을 초기화했어요. 새 비밀번호를 정해주세요.')}}}
+function rDiaryOpen(){
+  V.diaryDate??=todayS();const d=V.diaryDate,e=S.diary[d]||{},q=(V.diaryQ||'').trim().toLowerCase();
+  const has=x=>x&&((x.text||'').trim()||(x.title||'').trim());
+  const list=Object.keys(S.diary).filter(k=>has(S.diary[k])).sort().reverse().filter(k=>!q||((S.diary[k].title||'')+' '+(S.diary[k].text||'')).toLowerCase().includes(q));
+  $('#view').innerHTML=`<div class="jgrid">
+  <div class="card diary-paper">
+    <div class="row sec"><button class="btn sm" data-dyd="-1">‹</button><input type="date" class="field" id="dyDate" value="${d}"><button class="btn sm" data-dyd="1">›</button><button class="btn sm" data-dyd="0">오늘</button>
+      <b>${kdate(d)}</b><span class="saved" id="dySaved" style="margin-left:auto"></span><button class="btn sm" id="dyLock">🔒 잠그기</button></div>
+    <div class="row sec"><span class="small muted" style="width:32px">기분</span><span class="moods">${DMOODS.map(m=>`<button data-dymood="${m}" class="${e.mood===m?'on':''}">${m}</button>`).join('')}</span></div>
+    <div class="row sec"><span class="small muted" style="width:32px">날씨</span><span class="moods">${DWEATHER.map(m=>`<button data-dyweather="${m}" class="${e.weather===m?'on':''}">${m}</button>`).join('')}</span></div>
+    <input class="field dy-title" id="dyTitle" placeholder="오늘의 제목" value="${esc(e.title||'')}">
+    <textarea class="area dy-text" id="dyText" placeholder="오늘 하루는 어땠나요? 마음 가는 대로 적어보세요. (자동 저장)">${esc(e.text||'')}</textarea>
+    <div class="row small muted" style="margin-top:8px"><span id="dyCount">${(e.text||'').length.toLocaleString()}자</span><span style="flex:1"></span><button class="btn sm" id="dyPinChg">비밀번호 변경</button><button class="btn sm danger" id="dyDel">이 날 일기 삭제</button></div>
+  </div>
+  <div class="card"><h3>📚 지난 일기 (${list.length})</h3><input class="field" id="dyQ" placeholder="🔍 일기 검색" value="${esc(V.diaryQ||'')}" style="width:100%;margin-bottom:8px">
+    <div class="jlist">${list.map(k=>{const x=S.diary[k];return `<div class="jitem ${k===d?'on':''}" data-dyopen="${k}"><div class="d">${kdate(k)} ${x.mood||''}${x.weather||''}</div><div class="p">${esc(x.title||(x.text||'').split('\n')[0])}</div></div>`}).join('')||'<div class="empty">아직 쓴 일기가 없어요.</div>'}</div></div></div>`;
+  const E=()=>(S.diary[d]??={}),mark=()=>{E().updatedAt=Date.now();save();$('#dySaved').textContent='자동 저장됨 ✓ '+new Date().toTimeString().slice(0,5)};
+  const ta=$('#dyText');ta.addEventListener('input',()=>{$('#dyCount').textContent=ta.value.length.toLocaleString()+'자'});
+  ta.oninput=debounce(()=>{E().text=ta.value;mark()},400);$('#dyTitle').oninput=debounce(ev=>{E().title=ev.target.value;mark()},400);
+  $('#dyDate').onchange=ev=>{if(ev.target.value){V.diaryDate=ev.target.value;render()}};
+  $('#dyQ').oninput=debounce(ev=>{V.diaryQ=ev.target.value;render();const i=$('#dyQ');i.focus();i.setSelectionRange(i.value.length,i.value.length)},250);
+  $('#dyLock').onclick=()=>{V.diaryOpen=false;render();toast('🔒 일기장을 잠갔어요.')};
+  $('#dyDel').onclick=()=>{if(!has(S.diary[d]))return toast('이 날은 쓴 일기가 없어요.');if(confirm(`${kdate(d)} 일기를 삭제할까요?`)){delete S.diary[d];commit();toast('삭제했어요.')}};
+  $('#dyPinChg').onclick=()=>modal(`<h3>🔒 일기장 비밀번호 변경</h3>
+    <div class="f"><label>현재 비밀번호</label><input id="pc0" type="password" inputmode="numeric" maxlength="4"></div>
+    <div class="f"><label>새 비밀번호 (숫자 4자리)</label><input id="pc1" type="password" inputmode="numeric" maxlength="4"></div>
+    <div class="f"><label>새 비밀번호 확인</label><input id="pc2" type="password" inputmode="numeric" maxlength="4"></div>
+    <div class="acts"><button class="btn" data-close>취소</button><button class="btn pri" id="pcS">변경</button></div>`,()=>{
+    $('#pcS').onclick=async()=>{const a=$('#pc0').value,b=$('#pc1').value,c=$('#pc2').value;
+      if(await pinHash(a)!==S.diaryPin)return toast('현재 비밀번호가 틀렸어요.');
+      if(!/^\d{4}$/.test(b))return toast('새 비밀번호는 숫자 4자리로 해주세요.');if(b!==c)return toast('새 비밀번호 확인이 달라요.');
+      S.diaryPin=await pinHash(b);closeModal();commit();toast('🔒 비밀번호를 변경했어요.')}});
+  autoGrow(ta);
+}
+
 /* ---------- 연간 ---------- */
 function rYear(){
   const Y=V.year,ys=String(Y),cnt={};
@@ -1224,7 +1310,7 @@ function editTask(id){const t=S.tasks.find(x=>x.id===id);if(!t)return;
    <div class="f"><label>상세 메모</label><textarea id="tN" style="min-height:90px" placeholder="거래처, 금액, 연락처 등">${esc(t.note)}</textarea></div>
    <div class="acts"><button class="btn danger" id="tDel">삭제</button><span style="flex:1"></span><button class="btn" data-close>취소</button><button class="btn pri" id="tS">저장</button></div>`,
   ()=>{$('#tS').onclick=()=>{const nk=$('#tK')?.value||t.key;
-    if(nk!==t.key&&tasksOf('day',nk).length>=DAY_LIMIT)return toast('해당 날짜는 30개가 가득 찼어요.');
+    if(nk!==t.key&&tasksOf('day',nk).length>=DAY_LIMIT)return toast(`해당 날짜는 ${DAY_LIMIT}개가 가득 찼어요.`);
     const dn=$('#tDone').checked;if(dn!==t.done){t.done=dn;t.doneAt=dn?new Date().toISOString():null}
     Object.assign(t,{text:$('#tT').value.trim()||t.text,pri:$('#tP').value,cat:$('#tC').value,time:$('#tH').value,due:$('#tD').value,note:$('#tN').value,key:nk});closeModal();commit()};
    $('#tDel').onclick=()=>{if(confirm('이 업무를 삭제할까요?')){S.tasks=S.tasks.filter(x=>x!==t);closeModal();commit();toast('삭제했어요.')}};
@@ -1253,6 +1339,10 @@ document.addEventListener('click',e=>{
     if(b.itask)return ideaToTask(b.itask);if(b.iedit)return editIdea(b.iedit);if(b.idel)return delIdea(b.idel)}
   if(d.itag!==undefined){V.iTag=d.itag;return render()}
   const il=el.closest('[data-idea]');if(il)return editIdea(il.dataset.idea);
+  if(d.pk!==undefined){const i=$('#pin');if(!i)return;if(d.pk==='⌫')i.value=i.value.slice(0,-1);else if(i.value.length<4)i.value+=d.pk;i.dispatchEvent(new Event('input'));return}
+  if(d.dyd!==undefined){V.diaryDate=d.dyd==='0'?todayS():fmt(addDays(parse(V.diaryDate),+d.dyd));return render()}
+  const dyo=el.closest('[data-dyopen]');if(dyo){V.diaryDate=dyo.dataset.dyopen;return render()}
+  if(d.dymood||d.dyweather){const e=(S.diary[V.diaryDate]??={}),f=d.dymood?'mood':'weather',v=d.dymood||d.dyweather;e[f]=e[f]===v?'':v;e.updatedAt=Date.now();return commit()}
   if(d.hcheck)return toggleHabit(d.hcheck,V.sel);
   if(d.spend)return openSpend(d.spend);
   if(d.mnedit)return editMoney(d.mnedit,el.closest('.modal')?V._spendDay:null);
@@ -1342,7 +1432,7 @@ async function decryptObj(txt){const o=JSON.parse(txt);if(!o.data)return null;SC
   try{pt=new Uint8Array(await crypto.subtle.decrypt({name:'AES-GCM',iv:ub64(o.iv)},await deriveKey(ub64(o.salt)),ub64(o.data)))}catch(e){throw new Error('DECRYPT')}
   if(o.z){const d=await gz(pt,'d');if(!d)throw new Error('OLD');pt=d}
   return JSON.parse(new TextDecoder().decode(pt))}
-const payload=st=>{const o={ks:st.ks,tomb:st.tomb};['tasks','memos','routines','ddays','habits','ideas','money','yearGoals','journals','weekNotes','monthNotes','routineApplied','habitLog','moneyBudget','cats','customQuotes'].forEach(k=>o[k]=st[k]);return o};
+const payload=st=>{const o={ks:st.ks,tomb:st.tomb};['tasks','memos','routines','ddays','habits','ideas','money','yearGoals','journals','weekNotes','monthNotes','routineApplied','habitLog','moneyBudget','diary','diaryPin','cats','customQuotes'].forEach(k=>o[k]=st[k]);return o};
 const Sync={busy:false,again:false,state:'off',msg:'',timer:null,
   on(){return !!(SC.token&&SC.gistId&&SC.pw)},
   soon(ms=2500){if(!this.on())return;clearTimeout(this.timer);this.timer=setTimeout(()=>this.run(),ms)},
