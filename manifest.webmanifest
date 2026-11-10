@@ -1,7 +1,7 @@
 {
-  "name": "기적 플래너",
-  "short_name": "기적플래너",
-  "description": "사업자를 위한 오프라인 일정·업무 관리",
+  "name": "될놈다이어리",
+  "short_name": "될놈다이어리",
+  "description": "오프라인 일정·루틴·일기·가계부",
   "start_url": "./index.html",
   "scope": "./",
   "display": "standalone",

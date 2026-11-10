@@ -7,10 +7,10 @@
 <meta name="apple-mobile-web-app-capable" content="yes">
 <meta name="mobile-web-app-capable" content="yes">
 <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
-<meta name="apple-mobile-web-app-title" content="기적플래너">
+<meta name="apple-mobile-web-app-title" content="될놈다이어리">
 <meta name="format-detection" content="telephone=no">
 <link rel="apple-touch-icon" href="apple-touch-icon.png">
-<title>기적 플래너</title>
+<title>될놈다이어리</title>
 <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>🚀</text></svg>">
 <style>
 :root{
@@ -314,13 +314,24 @@ tr[data-mjump]{cursor:pointer}tr[data-mjump]:hover td{background:var(--accent-so
 .diary-paper{background:linear-gradient(var(--panel),var(--panel)) padding-box;border-color:#e9d8b4}
 .dy-title{width:100%;font-size:18px;font-weight:700;margin-bottom:10px}
 .dy-text{min-height:420px;font-size:15px;line-height:2;background:repeating-linear-gradient(transparent,transparent 29px,var(--line) 30px);background-attachment:local;padding-top:4px}
+.books{display:grid;grid-template-columns:repeat(auto-fill,minmax(260px,1fr));gap:12px}
+.bookc{border:1px solid var(--line);border-top:4px solid #b08a52;border-radius:14px;padding:14px;background:var(--panel);cursor:pointer;box-shadow:var(--shadow)}
+.bookc:hover{border-color:var(--accent)}
+.bk-top{display:flex;gap:10px;align-items:flex-start;margin-bottom:8px}.bk-ic{font-size:28px;line-height:1}.bk-t{font-weight:800;font-size:15px;word-break:break-word}
+.bk-r{color:#f5b301;font-size:13px;white-space:nowrap}
+.bk-q{font-size:13px;background:var(--panel2);border-radius:8px;padding:8px 10px;margin-bottom:8px;max-height:74px;overflow:hidden;font-style:italic;line-height:1.5}
+.bookc .tm{display:flex;gap:6px;flex-wrap:wrap;font-size:11px;color:var(--sub);align-items:center}
+.bk-title-in{width:100%;font-size:18px;font-weight:800}
+.bnote{border-left:3px solid #c9a46b;padding:8px 12px;margin-bottom:10px;background:var(--panel2);border-radius:0 10px 10px 0}
+.bnote:hover .ma{opacity:1}
+.bn-q{font-style:italic;margin:4px 0;line-height:1.7}.bn-t{white-space:pre-wrap;line-height:1.7}
 @media print{.side,.topbar,.qbar,.ta,.addf{display:none!important}.main{padding:0}}
 </style>
 </head>
 <body>
 <div class="app">
   <nav class="side" id="side">
-    <div class="logo"><span>🚀</span>기적 플래너</div>
+    <div class="logo"><span>🚀</span>될놈다이어리</div>
     <button class="nav" data-v="home">🏠 <span>홈 · 오늘</span><span class="k">1</span></button>
     <button class="nav" data-v="day">📋 <span>일간 업무</span><span class="k">2</span></button>
     <button class="nav" data-v="week">🗓️ <span>주간 업무</span><span class="k">3</span></button>
@@ -330,6 +341,7 @@ tr[data-mjump]{cursor:pointer}tr[data-mjump]:hover td{background:var(--accent-so
     <button class="nav" data-v="diary">📖 <span>일기장 🔒</span><span class="k"></span></button>
     <button class="nav" data-v="memo">📝 <span>메모</span><span class="k">7</span></button>
     <button class="nav" data-v="ideas">💡 <span>아이디어 노트</span><span class="k">8</span></button>
+    <button class="nav" data-v="books">📚 <span>독서생각정리</span><span class="k"></span></button>
     <button class="nav" data-v="money">💰 <span>가계부</span><span class="k">9</span></button>
     <button class="nav" data-v="year">📊 <span>연간 기록</span><span class="k">0</span></button>
     <button class="nav" data-v="settings">⚙️ <span>설정 · 백업</span><span class="k"></span></button>
@@ -467,7 +479,7 @@ const DEFAULT={tasks:[],journals:{},memos:[],routines:[],weekNotes:{},monthNotes
   cats:['영업','미팅','거래처','재무·세금','마케팅','운영','제품·개발','인사','개인'],
   routineApplied:{},settings:{theme:'light'},lastBackup:null,ks:{},tomb:{},
   habits:[{id:'h_read',text:'독서',min:60,icon:'📚'},{id:'h_exercise',text:'운동',min:30,icon:'🏃'},{id:'h_news',text:'뉴스 보기',min:30,icon:'📰'},{id:'h_platform',text:'운영 플랫폼 서칭',min:60,icon:'🔍'},{id:'h_stock',text:'재고 확인',min:0,icon:'📦'},{id:'h_spend',text:'지출 확인',min:0,icon:'💸'},{id:'h_order',text:'주문 확인',min:0,icon:'🛒'},{id:'h_market',text:'시장조사 서칭',min:0,icon:'🔎'},{id:'h_reels',text:'인스타그램 릴스 업로드',min:0,icon:'🎬'}],
-  habitLog:{},ideas:[],money:[],moneyBudget:{},diary:{},diaryPin:''};
+  habitLog:{},ideas:[],books:[],money:[],moneyBudget:{},diary:{},diaryPin:''};
 let S;
 let _seed=null;try{if(!localStorage.getItem(KEY)&&window.SEED_DATA&&window.SEED_DATA.tasks)_seed=window.SEED_DATA}catch(e){}
 try{S=Object.assign(structuredClone(DEFAULT),_seed||JSON.parse(localStorage.getItem(KEY)||'{}'))}catch(e){S=structuredClone(DEFAULT)}
@@ -479,7 +491,7 @@ if(!S.migr.h3){ // '주문 확인'·'시장조사 서칭' 루틴 1회 추가
 if(!S.migr.h4){ // '인스타그램 릴스 업로드' 루틴 1회 추가
   if(!S.habits.some(x=>x.id==='h_reels'))S.habits.push({id:'h_reels',text:'인스타그램 릴스 업로드',min:0,icon:'🎬'});S.migr.h4=true}
 /* ---- 동기화용 변경 추적: 항목마다 마지막 수정 시각(ks)과 삭제 기록(tomb)을 남김 ---- */
-const ARR_F=['tasks','memos','routines','ddays','habits','ideas','money'],MAP_F=['journals','weekNotes','monthNotes','routineApplied','habitLog','moneyBudget','diary'];
+const ARR_F=['tasks','memos','routines','ddays','habits','ideas','money','books'],MAP_F=['journals','weekNotes','monthNotes','routineApplied','habitLog','moneyBudget','diary'];
 function units(st){const m=new Map();
   ARR_F.forEach(a=>(st[a]||[]).forEach(x=>m.set(a+':'+x.id,x)));
   Object.entries(st.yearGoals||{}).forEach(([y,gs])=>(gs||[]).forEach(g=>m.set('yearGoals:'+y+':'+g.id,g)));
@@ -593,7 +605,7 @@ $('.slides').addEventListener('mouseenter',()=>{slidePaused=true;showSlide(slide
 $('.slides').addEventListener('mouseleave',()=>{slidePaused=false;showSlide(slideIdx)});
 
 /* ================= 렌더 ================= */
-const TITLES={home:'홈 · 오늘의 업무',day:'일간 업무',week:'주간 업무 일정',month:'월간 업무 일정',archive:'마감 기록 (완료 업무 보관함)',journal:'업무일지',diary:'📖 일기장',memo:'메모',ideas:'💡 아이디어 노트',money:'💰 가계부 · 지출 관리',year:'연간 기록',settings:'설정 · 백업'};
+const TITLES={home:'홈 · 오늘의 업무',day:'일간 업무',week:'주간 업무 일정',month:'월간 업무 일정',archive:'마감 기록 (완료 업무 보관함)',journal:'업무일지',diary:'📖 일기장',memo:'메모',ideas:'💡 아이디어 노트',books:'📚 독서생각정리',money:'💰 가계부 · 지출 관리',year:'연간 기록',settings:'설정 · 백업'};
 function render(){
   if(V.view!=='diary')V.diaryOpen=false; // 일기장을 벗어나면 자동 잠금
   document.querySelectorAll('.nav').forEach(b=>b.classList.toggle('on',b.dataset.v===V.view));
@@ -601,7 +613,7 @@ function render(){
   $('#qbar').style.display=V.view==='home'?'':'none';
   const days=S.lastBackup?Math.floor((Date.now()-S.lastBackup)/864e5):null;
   $('#bkInfo').textContent=days===null?'💾 백업 기록 없음':`💾 마지막 백업: ${days===0?'오늘':days+'일 전'}`;
-  ({home:rHome,day:rDay,week:rWeek,month:rMonth,archive:rArchive,journal:rJournal,diary:rDiary,memo:rMemo,ideas:rIdeas,money:rMoney,year:rYear,settings:rSettings})[V.view]();
+  ({home:rHome,day:rDay,week:rWeek,month:rMonth,archive:rArchive,journal:rJournal,diary:rDiary,memo:rMemo,ideas:rIdeas,books:rBooks,money:rMoney,year:rYear,settings:rSettings})[V.view]();
 }
 function go(v,extra={}){Object.assign(V,extra);V.view=v;render();window.scrollTo(0,0)}
 
@@ -624,7 +636,7 @@ function habitCard(d){
     ${hs.length&&pct===100?'<div class="notice" style="background:var(--ok-soft);color:var(--ok)">🎉 루틴 100% 달성! 나는 기적이다. 나는 운이 좋다.</div>':''}
     <div class="habits">${hs.map(h=>{const ok=hDone(d,h.id),tm=HT[h.id];return `<div class="habit ${ok?'ok':''} ${tm&&tm.running?'run':''}">
       <label class="hchk"><input type="checkbox" data-hcheck="${h.id}" ${ok?'checked':''}><span class="hic">${h.icon||'✅'}</span><span class="hname">${esc(h.text)}<small>${+h.min?'목표 '+fmtMin(+h.min):'매일 체크'}</small></span></label>
-      <div class="hrow">${h.id==='h_spend'?`<button class="btn sm" data-spend="${d}">💸 지출 기록 · ${won(S.money.filter(m=>m.date===d&&m.type==='out').reduce((a,m)=>a+m.amount,0))}</button>`:''}${d===t&&+h.min?`<button class="btn sm htimer" data-htimer="${h.id}">${tm?(tm.running?'⏸ ':'▶ ')+`<span id="ht_${h.id}">${mmss(tm.left)}</span>`:'▶ 타이머'}</button>${tm?`<button class="btn sm" data-hreset="${h.id}" title="타이머 초기화">↺</button>`:''}`:''}
+      <div class="hrow">${/독서/.test(h.text)?'<button class="btn sm" data-go2="books">📝 생각 기록</button>':''}${h.id==='h_spend'?`<button class="btn sm" data-spend="${d}">💸 지출 기록 · ${won(S.money.filter(m=>m.date===d&&m.type==='out').reduce((a,m)=>a+m.amount,0))}</button>`:''}${d===t&&+h.min?`<button class="btn sm htimer" data-htimer="${h.id}">${tm?(tm.running?'⏸ ':'▶ ')+`<span id="ht_${h.id}">${mmss(tm.left)}</span>`:'▶ 타이머'}</button>${tm?`<button class="btn sm" data-hreset="${h.id}" title="타이머 초기화">↺</button>`:''}`:''}
         <span class="hdots" title="최근 7일 기록">${days.map(x=>`<i class="${hDone(x,h.id)?'on':''}" title="${x}"></i>`).join('')}</span>
         <span class="small muted" title="연속 실행 일수">🔥${hStreak(h.id)}</span>
         <span class="ma"><button data-hedit="${h.id}" title="수정">✎</button><button data-hdel="${h.id}" class="x" title="삭제">✕</button></span></div></div>`}).join('')||'<div class="empty">[+ 루틴 추가]로 매일 할 루틴을 등록하세요.</div>'}</div></div>`}
@@ -1033,6 +1045,82 @@ document.addEventListener('paste',e=>{const f=e.target.closest&&e.target.closest
 document.addEventListener('change',e=>{const id=e.target.dataset&&e.target.dataset.istatus;if(!id)return;const x=S.ideas.find(y=>y.id===id);if(!x)return;
   x.status=e.target.value;x.updatedAt=Date.now();commit();toast(`${IS[x.status].i} ${IS[x.status].n}(으)로 변경`)});
 
+/* ---------- 📚 독서생각정리 ---------- */
+const BST={reading:{i:'📖',n:'읽는 중'},done:{i:'✅',n:'다 읽음'},want:{i:'🔖',n:'읽고 싶은 책'},stop:{i:'⏸',n:'잠시 멈춤'}};
+const bookOf=id=>S.books.find(b=>b.id===id);
+function bookCard(b){const n=b.notes||[],last=n[n.length-1];
+  return `<div class="bookc" data-book="${b.id}"><div class="bk-top"><span class="bk-ic">${(BST[b.status]||BST.reading).i}</span><div style="flex:1;min-width:0"><div class="bk-t">${esc(b.title)}</div><div class="small muted">${esc(b.author||'')}</div></div>${b.rating?`<span class="bk-r">${'★'.repeat(b.rating)}</span>`:''}</div>
+  ${b.oneline?`<div class="bk-q">⭐ ${esc(b.oneline)}</div>`:last?`<div class="bk-q">${last.quote?'“'+esc(last.quote)+'”':esc(last.thought||'')}</div>`:'<div class="small muted" style="margin-bottom:8px">아직 기록이 없어요 — 눌러서 생각을 적어보세요</div>'}
+  <div class="tm"><span class="chip">${(BST[b.status]||BST.reading).n}</span><span>✍️ ${n.length}개</span>${b.endDate?`<span>완독 ${b.endDate.slice(5).replace('-','/')}</span>`:b.startDate?`<span>시작 ${b.startDate.slice(5).replace('-','/')}</span>`:''}</div></div>`}
+function rBooks(){
+  if(V.bookId&&bookOf(V.bookId))return rBookDetail();V.bookId=null;V.bSt??='all';V.bQ??='';
+  const q=V.bQ.trim().toLowerCase(),y=todayS().slice(0,4);
+  const hay=b=>(b.title+' '+(b.author||'')+' '+(b.oneline||'')+' '+(b.summary||'')+' '+(b.feel||'')+' '+(b.apply||'')+' '+(b.notes||[]).map(n=>(n.quote||'')+' '+(n.thought||'')).join(' ')).toLowerCase();
+  const list=S.books.filter(b=>V.bSt==='all'||b.status===V.bSt).filter(b=>!q||hay(b).includes(q)).sort((a,b)=>(b.updatedAt||0)-(a.updatedAt||0));
+  const cnt=st=>S.books.filter(b=>b.status===st).length,doneY=S.books.filter(b=>b.status==='done'&&(b.endDate||'').startsWith(y)).length,notes=S.books.reduce((a,b)=>a+(b.notes||[]).length,0);
+  $('#view').innerHTML=`
+  <div class="stats"><div class="stat"><div class="l">📚 ${y}년 다 읽은 책</div><div class="n">${doneY}권</div></div><div class="stat"><div class="l">📖 읽는 중</div><div class="n">${cnt('reading')}권</div></div>
+   <div class="stat"><div class="l">✍️ 생각 기록</div><div class="n">${notes}개</div></div><div class="stat"><div class="l">🔖 읽고 싶은 책</div><div class="n">${cnt('want')}권</div></div></div>
+  <div class="card sec"><h3>➕ 책 추가</h3><form class="addf" id="bookForm"><input type="text" id="bkTitle" placeholder="책 제목" autocomplete="off">
+    <input type="text" id="bkAuthor" placeholder="저자 (선택)" autocomplete="off" style="flex:0 1 170px;min-width:110px;padding:9px 12px;border:1px solid var(--line);border-radius:10px;background:var(--panel2)">
+    <select id="bkStatus">${Object.entries(BST).map(([k,v])=>`<option value="${k}" ${k==='reading'?'selected':''}>${v.i} ${v.n}</option>`).join('')}</select><button class="btn pri">추가</button></form></div>
+  <div class="row sec"><span class="mtabs">${[['all','전체'],...Object.entries(BST).map(([k,v])=>[k,v.i+' '+v.n])].map(([k,n])=>`<button data-bst="${k}" class="${V.bSt===k?'on':''}">${n}</button>`).join('')}</span>
+   <input class="field" id="bkQ" placeholder="🔍 책 · 문장 · 생각 검색" value="${esc(V.bQ)}" style="flex:1;min-width:160px"></div>
+  <div class="books">${list.map(bookCard).join('')||'<div class="empty">읽는 책을 추가하고, 마음에 남은 문장과 내 생각을 기록해 보세요 📚</div>'}</div>`;
+  $('#bookForm').onsubmit=e=>{e.preventDefault();const t=$('#bkTitle').value.trim();if(!t){toast('책 제목을 입력하세요.');return}const st=$('#bkStatus').value;
+    const b={id:uid(),title:t,author:$('#bkAuthor').value.trim(),status:st,startDate:st==='want'?'':todayS(),endDate:st==='done'?todayS():'',rating:0,notes:[],oneline:'',summary:'',feel:'',apply:'',createdAt:Date.now(),updatedAt:Date.now()};
+    S.books.push(b);V.bookId=b.id;commit();toast('📚 책을 추가했어요. 생각을 기록해 보세요!')};
+  $('#bkQ').oninput=debounce(e=>{V.bQ=e.target.value;rBooks();const i=$('#bkQ');i.focus();i.setSelectionRange(i.value.length,i.value.length)},250);
+}
+function rBookDetail(){const b=bookOf(V.bookId);b.notes??=[];
+  const notes=[...b.notes].sort((x,z)=>((z.date||'')+(z.createdAt||0)).localeCompare((x.date||'')+(x.createdAt||0)));
+  const st=BST[b.status]||BST.reading;
+  $('#view').innerHTML=`<div class="row sec"><button class="btn" data-bback="1">‹ 책 목록</button><span style="flex:1"></span><button class="btn" id="bkCopy">📋 독서노트 복사</button><button class="btn danger" id="bkDel">책 삭제</button></div>
+  <div class="grid g-home"><div>
+    <div class="card sec"><div class="row" style="align-items:flex-start"><span style="font-size:40px;line-height:1">${st.i}</span><div style="flex:1;min-width:180px">
+      <input class="field bk-title-in" id="bdTitle" value="${esc(b.title)}"><input class="field" id="bdAuthor" value="${esc(b.author||'')}" placeholder="저자" style="margin-top:6px;width:100%"></div></div>
+     <div class="row" style="margin-top:10px"><select class="field" id="bdStatus">${Object.entries(BST).map(([k,v])=>`<option value="${k}" ${b.status===k?'selected':''}>${v.i} ${v.n}</option>`).join('')}</select>
+      <label class="small">시작 <input type="date" class="field" id="bdStart" value="${b.startDate||''}"></label><label class="small">완독 <input type="date" class="field" id="bdEnd" value="${b.endDate||''}"></label>
+      <span class="stars">${[1,2,3,4,5].map(n=>`<button data-bstar="${n}" class="${(b.rating||0)>=n?'on':''}" title="${n}점">★</button>`).join('')}</span></div></div>
+    <div class="card sec"><h3>✍️ 생각 기록 추가</h3>
+     <div class="row"><input type="date" class="field" id="bnDate" value="${todayS()}"><input class="field" id="bnPage" placeholder="페이지 (선택)" inputmode="numeric" style="width:130px"></div>
+     <textarea class="area" id="bnQuote" placeholder="📌 인상 깊은 문장 (책에서 그대로 옮겨 적기)" style="margin-top:8px;min-height:70px"></textarea>
+     <textarea class="area" id="bnThought" placeholder="💭 내 생각 · 느낀 점 · 떠오른 질문" style="margin-top:8px"></textarea>
+     <div class="row" style="margin-top:8px;justify-content:flex-end"><button class="btn pri" id="bnAdd">기록 저장</button></div></div>
+    <div class="card sec"><h3>📖 기록 (${notes.length})</h3>${notes.map(n=>`<div class="bnote"><div class="row small muted"><span>${n.date?kdate(n.date):''}</span>${n.page?`<span class="chip">p.${esc(n.page)}</span>`:''}<span style="flex:1"></span>
+      <span class="ma"><button data-bnedit="${n.id}" title="수정">✎</button><button data-bndel="${n.id}" class="x" title="삭제">✕</button></span></div>
+      ${n.quote?`<div class="bn-q">“${esc(n.quote)}”</div>`:''}${n.thought?`<div class="bn-t">${esc(n.thought)}</div>`:''}</div>`).join('')||'<div class="empty">읽다가 마음에 남은 문장과 생각을 기록해 보세요.</div>'}</div>
+  </div>
+  <div class="card"><h3>🧠 생각 정리 <span class="r saved" id="bdSaved"></span></h3>
+    <div class="jf"><label>⭐ 한 줄 평</label><textarea class="area" data-bf="oneline" style="min-height:60px" placeholder="이 책을 한 문장으로 표현하면?">${esc(b.oneline||'')}</textarea></div>
+    <div class="jf"><label>📝 핵심 내용 요약</label><textarea class="area" data-bf="summary" placeholder="이 책의 핵심 메시지 3가지">${esc(b.summary||'')}</textarea></div>
+    <div class="jf"><label>💡 가장 크게 느낀 점</label><textarea class="area" data-bf="feel" placeholder="읽고 나서 생각이 바뀐 점">${esc(b.feel||'')}</textarea></div>
+    <div class="jf"><label>🚀 내 삶에 적용할 것 <span class="r"><button class="btn sm" id="bdTask">✅ 할 일로 보내기</button></span></label><textarea class="area" data-bf="apply" placeholder="한 줄에 하나씩 — [할 일로 보내기]로 바로 실행">${esc(b.apply||'')}</textarea></div>
+  </div></div>`;
+  const mark=()=>{b.updatedAt=Date.now();save();const e=$('#bdSaved');if(e)e.textContent='자동 저장됨 ✓ '+new Date().toTimeString().slice(0,5)};
+  document.querySelectorAll('[data-bf]').forEach(a=>{a.oninput=debounce(()=>{b[a.dataset.bf]=a.value;mark()},400)});
+  $('#bdTitle').onchange=e=>{b.title=e.target.value.trim()||b.title;mark()};$('#bdAuthor').onchange=e=>{b.author=e.target.value.trim();mark()};
+  $('#bdStart').onchange=e=>{b.startDate=e.target.value;mark()};$('#bdEnd').onchange=e=>{b.endDate=e.target.value;mark()};
+  $('#bdStatus').onchange=e=>{b.status=e.target.value;if(b.status==='done'&&!b.endDate)b.endDate=todayS();if(b.status==='reading'&&!b.startDate)b.startDate=todayS();
+    b.updatedAt=Date.now();commit();if(b.status==='done')toast('🎉 완독 축하해요! 한 줄 평을 남겨보세요.')};
+  $('#bnAdd').onclick=()=>{const quote=$('#bnQuote').value.trim(),thought=$('#bnThought').value.trim();if(!quote&&!thought)return toast('문장이나 생각을 적어주세요.');
+    b.notes.push({id:uid(),date:$('#bnDate').value||todayS(),page:$('#bnPage').value.trim(),quote,thought,createdAt:Date.now()});
+    if(b.status==='want'){b.status='reading';b.startDate=b.startDate||todayS()}b.updatedAt=Date.now();commit();toast('✍️ 기록했어요.')};
+  $('#bdTask').onclick=()=>{const lines=(b.apply||'').split('\n').map(x=>x.replace(/^[-•*\d.)\s]+/,'').trim()).filter(Boolean);if(!lines.length)return toast('적용할 것을 먼저 적어주세요.');
+    let n=0;lines.forEach(l=>{if(!tasksOf('day',todayS()).some(t=>t.text===l)&&addTask('day',todayS(),l,{note:'📚 '+b.title}))n++});save();toast(`오늘 할 일에 ${n}개 추가했어요.`)};
+  $('#bkCopy').onclick=()=>{const txt=`📚 ${b.title}${b.author?' — '+b.author:''}\n${st.n}${b.rating?' · '+'★'.repeat(b.rating):''}\n\n`+
+    (b.oneline?`⭐ 한 줄 평\n${b.oneline}\n\n`:'')+(b.summary?`📝 핵심 요약\n${b.summary}\n\n`:'')+(b.feel?`💡 느낀 점\n${b.feel}\n\n`:'')+(b.apply?`🚀 적용할 것\n${b.apply}\n\n`:'')+
+    notes.map(n=>`[${n.date||''}${n.page?' p.'+n.page:''}]\n${n.quote?'“'+n.quote+'”\n':''}${n.thought||''}`).join('\n\n');
+    navigator.clipboard.writeText(txt).then(()=>toast('📋 독서노트를 복사했어요. 블로그·메모에 붙여넣으세요.'),()=>toast('복사 실패'))};
+  $('#bkDel').onclick=()=>{if(confirm(`"${b.title}"과(와) 기록 ${b.notes.length}개를 삭제할까요?`)){S.books=S.books.filter(x=>x!==b);V.bookId=null;commit();toast('삭제했어요.')}};
+}
+function editBookNote(id){const b=bookOf(V.bookId),n=b&&b.notes.find(x=>x.id===id);if(!n)return;
+  modal(`<h3>✎ 기록 수정</h3><div class="row"><div class="f"><label>날짜</label><input type="date" id="enD" value="${n.date||''}"></div><div class="f"><label>페이지</label><input id="enP" value="${esc(n.page||'')}"></div></div>
+   <div class="f"><label>📌 인상 깊은 문장</label><textarea id="enQ" style="min-height:90px">${esc(n.quote||'')}</textarea></div>
+   <div class="f"><label>💭 내 생각</label><textarea id="enT">${esc(n.thought||'')}</textarea></div>
+   <div class="acts"><button class="btn" data-close>취소</button><button class="btn pri" id="enS">저장</button></div>`,()=>{
+   $('#enS').onclick=()=>{Object.assign(n,{date:$('#enD').value,page:$('#enP').value.trim(),quote:$('#enQ').value.trim(),thought:$('#enT').value.trim()});b.updatedAt=Date.now();closeModal();commit();toast('수정했어요.')}})}
+
 /* ---------- 가계부 · 지출 관리 ---------- */
 const MCAT_OUT=['원단·자재','생산·공임','택배·물류','마케팅·광고','사무실·임대료','공과금·통신','세금·보험','식비','교통·주유','개인·생활','기타'];
 const MCAT_IN=['매출','정산금','기타수입'],PAY=['카드','현금','계좌이체','기타'];
@@ -1265,7 +1353,7 @@ function rSettings(){
     <hr style="border:0;border-top:1px solid var(--line);margin:12px 0"><button class="btn danger" id="reset">⚠ 전체 데이터 초기화</button></div>
   </div>`;
   bindSyncCard();
-  $('#bk').onclick=()=>{download(`기적플래너_백업_${todayS()}.json`,JSON.stringify(S,null,1),'application/json');S.lastBackup=Date.now();commit();toast('백업 파일을 저장했어요 (다운로드 폴더).')};
+  $('#bk').onclick=()=>{download(`될놈다이어리_백업_${todayS()}.json`,JSON.stringify(S,null,1),'application/json');S.lastBackup=Date.now();commit();toast('백업 파일을 저장했어요 (다운로드 폴더).')};
   $('#rs').onchange=e=>{const f=e.target.files[0];if(!f)return;const r=new FileReader();r.onload=()=>{try{const d=JSON.parse(r.result);if(!d.tasks)throw 0;
     modal(`<h3>⬆ 백업 불러오기</h3><p>백업 파일: 할일 ${d.tasks.length} · 메모 ${(d.memos||[]).length} · 일지 ${Object.keys(d.journals||{}).length}</p>
       <p class="small muted"><b>합치기</b>: 지금 기기의 데이터와 백업을 합칩니다 (다른 기기와 옮길 때 추천).<br><b>덮어쓰기</b>: 지금 데이터를 지우고 백업으로 교체합니다.</p>
@@ -1319,7 +1407,7 @@ function editTask(id){const t=S.tasks.find(x=>x.id===id);if(!t)return;
 /* ================= 이벤트 (위임) ================= */
 document.addEventListener('click',e=>{
   const el=e.target;
-  const nav=el.closest('.nav');if(nav)return go(nav.dataset.v);
+  const nav=el.closest('.nav');if(nav){if(nav.dataset.v==='books')V.bookId=null;return go(nav.dataset.v)}
   if(el.classList.contains('chk')){const id=el.dataset.id||el.closest('[data-id]')?.dataset.id;if(id)return toggleTask(id);
     if(el.dataset.yg){const g=S.yearGoals[V.year].find(x=>x.id===el.dataset.yg);g.done=!g.done;return commit()}}
   const act=el.closest('[data-act]');if(act){e.preventDefault();const id=act.closest('[data-id]').dataset.id,t=S.tasks.find(x=>x.id===id);if(!t)return;
@@ -1332,7 +1420,13 @@ document.addEventListener('click',e=>{
   if(d.cal!==undefined){if(d.cal==='0'){V.cal=monthOf(todayS());V.sel=todayS()}else{const x=parse(V.cal+'-01');x.setMonth(x.getMonth()+ +d.cal);V.cal=monthOf(fmt(x))}return render()}
   if(d.sel==='today'){V.sel=todayS();V.cal=monthOf(V.sel);return render()}
   if(d.jgo){return go('journal',{jdate:d.jgo})}
-  if(d.go2){return go(d.go2)}
+  if(d.go2){if(d.go2==='books')V.bookId=null;return go(d.go2)}
+  if(d.bback){V.bookId=null;return render()}
+  if(d.bst){V.bSt=d.bst;return render()}
+  if(d.bnedit)return editBookNote(d.bnedit);
+  if(d.bndel){const b=bookOf(V.bookId);if(b&&confirm('이 기록을 삭제할까요?')){b.notes=b.notes.filter(n=>n.id!==d.bndel);b.updatedAt=Date.now();commit();toast('삭제했어요.')}return}
+  if(d.bstar){const b=bookOf(V.bookId);if(b){const n=+d.bstar;b.rating=b.rating===n?0:n;b.updatedAt=Date.now();commit()}return}
+  const bc=el.closest('[data-book]');if(bc){V.bookId=bc.dataset.book;return render()}
   if(el.closest('select.ist'))return;
   const ib=el.closest('[data-istar],[data-itask],[data-iedit],[data-idel]');
   if(ib){const b=ib.dataset;if(b.istar){const x=S.ideas.find(y=>y.id===b.istar);x.star=!x.star;x.updatedAt=Date.now();return commit()}
@@ -1386,7 +1480,7 @@ document.addEventListener('click',e=>{
   if(el.id==='carry'){const t=todayS();let n=0;overdue().sort((a,b)=>PRI_ORDER[a.pri]-PRI_ORDER[b.pri]).forEach(x=>{if(tasksOf('day',t).length<DAY_LIMIT){x.key=t;x.carried=(x.carried||0)+1;n++}});commit();toast(`${n}건을 오늘로 가져왔어요.`)}
   const sr=el.closest('[data-sr]');if(sr){closeModal();const[k,v]=sr.dataset.sr.split('|');
     if(k==='task'){const t=S.tasks.find(x=>x.id===v);if(t.scope==='day')go('home',{sel:t.key,cal:monthOf(t.key)});else if(t.scope==='week')go('week',{week:t.key});else go('month',{month:t.key})}
-    else if(k==='memo'){go('memo');editMemo(v)}else if(k==='idea'){go('ideas');editIdea(v)}else if(k==='money'){const m=S.money.find(x=>x.id===v);go('money',{mPer:'month',mRef:m?m.date:todayS()});editMoney(v)}else go('journal',{jdate:v})}
+    else if(k==='memo'){go('memo');editMemo(v)}else if(k==='idea'){go('ideas');editIdea(v)}else if(k==='book'){go('books',{bookId:v})}else if(k==='money'){const m=S.money.find(x=>x.id===v);go('money',{mPer:'month',mRef:m?m.date:todayS()});editMoney(v)}else go('journal',{jdate:v})}
 });
 document.addEventListener('submit',e=>{const f=e.target;if(!f.classList.contains('addf')||!f.dataset.scope)return;e.preventDefault();
   const fd=new FormData(f);if(addTask(f.dataset.scope,f.dataset.key,fd.get('text'),{pri:fd.get('pri'),cat:fd.get('cat'),time:fd.get('time')||'',due:fd.get('due')||''})){commit();
@@ -1407,12 +1501,13 @@ $('#gsearch').addEventListener('keydown',e=>{if(e.key!=='Enter'||e.isComposing)r
   const r=[];S.tasks.filter(t=>(t.text+' '+t.note).toLowerCase().includes(q)).forEach(t=>r.push(`<div data-sr="task|${t.id}">${t.done?'✅':'⬜'} ${esc(t.text)} <span class="small muted">· ${{day:'일일',week:'주간',month:'월간'}[t.scope]} ${t.key}</span></div>`));
   S.memos.filter(m=>((m.title||'')+m.body).toLowerCase().includes(q)).forEach(m=>r.push(`<div data-sr="memo|${m.id}">📝 ${esc(m.title||m.body.slice(0,40))}</div>`));
   S.money.filter(m=>(m.memo+' '+m.cat).toLowerCase().includes(q)).forEach(m=>r.push(`<div data-sr="money|${m.id}">${m.type==='in'?'💰':'💸'} ${esc(m.cat)} ${esc(m.memo)} ${won(m.amount)} <span class="small muted">· 가계부 ${m.date}</span></div>`));
+  S.books.forEach(b=>{const hay=(b.title+' '+(b.author||'')+' '+(b.oneline||'')+' '+(b.summary||'')+' '+(b.feel||'')+' '+(b.apply||'')+' '+(b.notes||[]).map(n=>(n.quote||'')+' '+(n.thought||'')).join(' ')).toLowerCase();if(hay.includes(q))r.push(`<div data-sr="book|${b.id}">📚 ${esc(b.title)} <span class="small muted">· 독서생각정리</span></div>`)});
   S.ideas.filter(x=>(x.text+' '+(x.note||'')).toLowerCase().includes(q)).forEach(x=>r.push(`<div data-sr="idea|${x.id}">${IT[x.type].i} ${esc(x.text)} <span class="small muted">· 아이디어 노트 ${IS[x.status].n}</span></div>`));
   Object.entries(S.journals).filter(([k,j])=>JF.some(([f])=>(j[f]||'').toLowerCase().includes(q))).forEach(([k])=>r.push(`<div data-sr="journal|${k}">📔 업무일지 ${kdate(k)}</div>`));
   modal(`<h3>🔍 "${esc(q)}" 검색 결과 ${r.length}건</h3><div class="sres">${r.slice(0,200).join('')||'<div class="empty">결과 없음</div>'}</div><div class="acts"><button class="btn" data-close>닫기</button></div>`)});
 /* ================= 자동 동기화 (GitHub 비공개 Gist + 암호화) ================= */
 const SYNC_KEY='miracle_planner_sync',GIST_DESC='miracle-planner-sync (암호화된 기적플래너 데이터)',GFILE='planner.json';
-const TOKEN_URL='https://github.com/settings/tokens/new?scopes=gist&description='+encodeURIComponent('기적플래너 동기화');
+const TOKEN_URL='https://github.com/settings/tokens/new?scopes=gist&description='+encodeURIComponent('될놈다이어리 동기화');
 let SC={};try{SC=JSON.parse(localStorage.getItem(SYNC_KEY)||'{}')}catch(e){}   // 토큰·비밀번호는 이 기기에만 저장 (업로드 안 됨)
 const saveSC=()=>{try{localStorage.setItem(SYNC_KEY,JSON.stringify(SC))}catch(e){}};
 const b64=u8=>{let s='';for(let i=0;i<u8.length;i+=32768)s+=String.fromCharCode.apply(null,u8.subarray(i,i+32768));return btoa(s)};
@@ -1432,7 +1527,7 @@ async function decryptObj(txt){const o=JSON.parse(txt);if(!o.data)return null;SC
   try{pt=new Uint8Array(await crypto.subtle.decrypt({name:'AES-GCM',iv:ub64(o.iv)},await deriveKey(ub64(o.salt)),ub64(o.data)))}catch(e){throw new Error('DECRYPT')}
   if(o.z){const d=await gz(pt,'d');if(!d)throw new Error('OLD');pt=d}
   return JSON.parse(new TextDecoder().decode(pt))}
-const payload=st=>{const o={ks:st.ks,tomb:st.tomb};['tasks','memos','routines','ddays','habits','ideas','money','yearGoals','journals','weekNotes','monthNotes','routineApplied','habitLog','moneyBudget','diary','diaryPin','cats','customQuotes'].forEach(k=>o[k]=st[k]);return o};
+const payload=st=>{const o={ks:st.ks,tomb:st.tomb};['tasks','memos','routines','ddays','habits','ideas','money','books','yearGoals','journals','weekNotes','monthNotes','routineApplied','habitLog','moneyBudget','diary','diaryPin','cats','customQuotes'].forEach(k=>o[k]=st[k]);return o};
 const Sync={busy:false,again:false,state:'off',msg:'',timer:null,
   on(){return !!(SC.token&&SC.gistId&&SC.pw)},
   soon(ms=2500){if(!this.on())return;clearTimeout(this.timer);this.timer=setTimeout(()=>this.run(),ms)},
